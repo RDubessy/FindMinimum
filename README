@@ -1,0 +1,6 @@
+Installation instructions are detailled in the header of "src/main.cpp" file.
+
+These can be displayed in a html format by first issuing:
+doxygen doc/Doxyfile
+(requires doxygen to be installed) in the project root directory.
+The documentation will then be accessible through the doc/html/index.html file.
