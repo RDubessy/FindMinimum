@@ -300,6 +300,13 @@ double gradient_descent(Options &options, double *ions) {
       display(options,ions,epot+eint);//Initial cloud display
     cerr << "[I] Initial energy : " << epot + eint 
         << "[" << epot << "|" << eint<<"]" << endl;
+    double tmin,tmax;
+    tmin=0.01;
+    tmax=500;
+    double t;
+    t=tmax;
+    double beta=0.5;
+    double gamma=1.5;
     while(true) {
         if(options.search==0) {
             /* Exact line search. {{{ */
@@ -311,8 +318,7 @@ double gradient_descent(Options &options, double *ions) {
             /* }}} */
         } else if(options.search==1) {
             /* Backtracking search. {{{ */
-            double t=1.0;
-            double beta=0.5;
+	  //Modified to a pseudo optimisation search, it's an auto increasing backtracking
             norm=0.0;
             max=0.0;
             for(int i=0;i<3*n;i++) {
@@ -323,6 +329,8 @@ double gradient_descent(Options &options, double *ions) {
             }
             diff=epot+eint;
             double *np=new double[3*n];
+	    int p=0;
+	    t/=beta;
             do {
                 t*=beta;
                 //stop=diff-alpha*t*norm;
@@ -330,9 +338,30 @@ double gradient_descent(Options &options, double *ions) {
                     np[i]=ions[i]-t*grad[i];
                 }
                 nc=energy_grad(options,np,grad,epot,eint);
+		p++;
             } while((epot+eint)>diff);
+	    //We see if increasing the coefficient can have a good effect
+	    if(p==1 && t<tmax)
+	      {
+		double olddiff;
+		do {
+		  olddiff=diff-(epot+eint);
+		  t*=gamma;
+		  //stop=diff-alpha*t*norm;
+		  for(int i=0;i<3*n;i++) {
+		    np[i]=ions[i]-t*grad[i];
+		  }
+		  nc=energy_grad(options,np,grad,epot,eint);
+		  p++;
+		} while(((diff-(epot+eint))>olddiff)&& p<5 && t<tmax);
+	      }
+	    cerr << "Backtracking t : "<< t<<endl;
+	    if(t<tmin)
+	      t=tmin;
+	    if(t>tmax)
+	      t=tmax;
             for(int i=0;i<3*n;i++)
-                ions[i]=np[i];
+	      ions[i]=np[i];
             delete[] np;
             diff-=epot+eint;
 	    shuffle(options,ions);
