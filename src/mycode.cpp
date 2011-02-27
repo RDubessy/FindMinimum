@@ -329,13 +329,13 @@ double gradient_descent(Options &options, double *ions) {
                 for(int i=0;i<3*n;i++) {
                     np[i]=ions[i]-t*grad[i];
                 }
-                shuffle(options,ions);
                 nc=energy_grad(options,np,grad,epot,eint);
             } while((epot+eint)>diff);
             for(int i=0;i<3*n;i++)
                 ions[i]=np[i];
             delete[] np;
             diff-=epot+eint;
+	    shuffle(options,ions);
             max=sqrt(max)*t;
             norm=sqrt(norm)*t/n;
             /* }}} */
