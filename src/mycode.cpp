@@ -480,7 +480,7 @@ void getOptions(Options &options, ConfigMap &config) {
             options.cDir[ii]=options.cDir[ii+1]=options.cDir[ii+2]=false;
             options.eff[ii]=coeff*pow(options.stdo[0],2.0)/options.m[i];
             options.eff[ii+1]=coeff*pow(options.stdo[1],2.0)/options.m[i];
-            options.eff[ii+2]=coeff*pow(options.stdo[2],2.0)*options.m[i];
+            options.eff[ii+2]=coeff*options.stdo[2];
             if(tmpDir[i]>-1) {
                 options.cDir[ii+tmpDir[i]]=true;
                 options.cInt[ii+tmpDir[i]]=coeffCool*tmpInt[i];
