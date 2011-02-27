@@ -27,6 +27,8 @@ double mp=1.672621637e-27;             /*!<\brief Proton mass. */
 double h=6.62606896e-34;               /*!<\brief Planck constant. */
 /*!\brief Energy normalization coefficient. */
 double coeff=8*pi*pi*pi*eps0*mp/(e*e)*1e-6;
+//The energy for the coulomb interaction is 1/r with R in radiants.
+//The mass being in AMU and the Frequency in MHz we end up on this coefficient
 /*!\brief Cooling intensity normalization coefficient. */
 double coeffCool=4*pi*eps0*h/(e*e)*1e3;
 /* }}} */
