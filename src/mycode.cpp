@@ -343,7 +343,7 @@ double gradient_descent(Options &options, double *ions) {
         if(diff<0)
             cerr << "[I] Warning : Energy incresead at this step ["
                 << c << "] !\n"
-                << "[I] Was : " << epot++eint+diff << ", is : " << epot+eint << endl;
+                << "[I] Was : " << epot+eint+diff << ", is : " << epot+eint << endl;
         else {
             if(c%10==0)
 	      {
