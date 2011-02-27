@@ -24,6 +24,7 @@ struct Options {
     int *n;             /*!<\brief Ions' number in each species array. */
     double *m;          /*!<\brief Species' mass array. */
     double *eff;        /*!<\brief Array of effective stiffness. */
+    int minsteps;       /*!<\brief The minimum number of steps to do. */
     double dpres;       /*!<\brief Target precision on displacement. */
     double gpres;       /*!<\brief Target precision on step size. */
     bool file;          /*!<\brief Monitoring active (or not). */

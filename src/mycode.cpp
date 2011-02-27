@@ -374,7 +374,7 @@ double gradient_descent(Options &options, double *ions) {
         if(monitor)
             file << c << " " << epot << " " << eint << " " << max << " " 
                 << nc << " " << ns << endl;
-        if(pres<options.dpres)
+        if(pres<options.dpres && c > options.minsteps)
             break;
     }
     cerr << "[I] Gradient descent took " << c << " iterations to complete."
@@ -541,6 +541,7 @@ void getOptions(Options &options, ConfigMap &config) {
     options.interactions=getConfig(config,"algorithm::interactions",0);
     options.search=getConfig(config,"algorithm::search",0);
     options.monitor=getConfig(config,"algorithm::monitor","monitor");
+    options.minsteps=getConfig(config,"algorithm::minsteps",1);
     options.dpres=getConfig(config,"algorithm::dpres",1e-3);
     options.gpres=getConfig(config,"algorithm::gpres",1e-3);
     options.seed=getConfig(config,"algorithm::seed",-1);
