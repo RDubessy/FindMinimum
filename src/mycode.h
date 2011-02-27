@@ -28,6 +28,7 @@ struct Options {
     double gpres;       /*!<\brief Target precision on step size. */
     bool file;          /*!<\brief Monitoring active (or not). */
     string monitor;     /*!<\brief Name of the output monitor file. */
+    string save_file;   /*!<\brief Name of the output positions file. */
     string init;        /*!<\brief Name of an input positions file. */
     bool *cDir;         /*!<\brief Array of cooling directions. */
     double *cInt;       /*!<\brief Array of cooling intensities. */
@@ -41,6 +42,8 @@ bool initialization(Options &,double *);
 void getOptions(Options &, ConfigMap &);
 /*! \brief This method displays the ions position on the standard output. */
 void display(Options &,double *,double);
+/*! \brief This method write the ions position in a file. */
+int write_position_file(Options &,double *,double);
 /*! \brief This method display synthetic information on the cloud. */
 void cloud_analysis(Options &,double *,double);
 /*! \brief This method implements the gradient descent algorithm. */

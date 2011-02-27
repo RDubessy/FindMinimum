@@ -296,7 +296,8 @@ double gradient_descent(Options &options, double *ions) {
         file << "#step Energy[pot] Energy[int] displacement Nint Nsearch\n"
             << c << " " << epot << " " << eint << " " << max << " " << nc
             << " " << ns << endl;;
-    display(options,ions,epot+eint);
+    if(write_position_file(options, ions, epot+eint)) //write to the file
+      display(options,ions,epot+eint);//Initial cloud display
     cerr << "[I] Initial energy : " << epot + eint 
         << "[" << epot << "|" << eint<<"]" << endl;
     while(true) {
@@ -345,7 +346,12 @@ double gradient_descent(Options &options, double *ions) {
                 << "[I] Was : " << epot+diff << ", is : " << epot << endl;
         else {
             if(c%10==0)
-                display(options,ions,epot+eint);
+	      {
+		if(write_position_file(options, ions, epot+eint)) //write to the file
+		  display(options,ions,epot+eint); //Display every 10 frames
+		else
+		  cerr << "[I] Position file written, step [" << c << "]" << endl;
+	      }
             /*
             diff/=epot+eint;
             if(diff<Epres) {
@@ -373,7 +379,8 @@ double gradient_descent(Options &options, double *ions) {
     }
     cerr << "[I] Gradient descent took " << c << " iterations to complete."
         << endl;
-    display(options,ions,epot+eint);
+    if(write_position_file(options, ions, epot+eint)) //write to the file
+      display(options,ions,epot+eint); //Final display
     if(monitor) {
         file << endl;
         file.close();
@@ -402,6 +409,46 @@ void display(Options &options, double *ions, double frame) {
     }
     cout << endl;
     return;
+}
+/* }}} */
+/* test_position_file: test if we can write in the positions file {{{ */
+int test_position_file(Options &options) {
+  ofstream file(options.save_file.c_str());
+  if(!file.good()) {
+    cerr << "[E] Can not open saving file (" << options.monitor.c_str()
+	 << ") !" << endl;
+    return -1;
+  }
+  return 0;
+}
+/* }}} */
+/* write_position_file: write the position of the ions in the file {{{ */
+int write_position_file(Options &options, double *ions, double frame) {
+  
+  ofstream file(options.save_file.c_str());
+  if(!file.good()) {
+    cerr << "[E] Can not open saving file (" << options.monitor.c_str()
+	 << ") !" << endl;
+    return -1;
+  }
+  
+  int c=0;
+  int max=0;
+  file << "#frame=" << frame << "\n";
+  for(int i=0;i<options.nEsp;i++) {
+    max+=options.n[i];
+    file << "#m=" << options.m[i] << "\n";
+    while(c<max) {
+      file << ions[3*c] << " " << ions[3*c+1] << " " << ions[3*c+2] 
+	   << "\n";
+      c++;
+    }
+    file << "\n";
+  }
+  file << endl;
+  file.close();
+  
+  return 0;
 }
 /* }}} */
 /* cloud_analysis: {{{ */
@@ -500,6 +547,7 @@ void getOptions(Options &options, ConfigMap &config) {
     if(options.seed==-1)
         options.seed=(int)time(NULL);
     //General
+    options.save_file=getConfig(config,"general::save_file","save_file");
     options.file=false;
     options.init=getConfig(config,"general::init","");
     if(options.init.size()>0)
