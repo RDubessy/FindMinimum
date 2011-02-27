@@ -15,7 +15,9 @@
  */
 struct Options {
     int nEsp;           /*!<\brief Number of charges species. */
-    double size;        /*!<\brief Size of the initial distribution. */
+    double sizex;       /*!<\brief Size of the initial distribution along X. */
+    double sizey;       /*!<\brief Size of the initial distribution along Y. */
+    double sizez;       /*!<\brief Size of the initial distribution along Z. */
     int nTot;           /*!<\brief Total number of ions. */
     int interactions;   /*!<\brief Flag for the interaction algorithm. */
     int search;         /*!<\brief Flag for the stepsize algorithm. */

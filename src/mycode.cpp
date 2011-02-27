@@ -495,7 +495,9 @@ void cloud_analysis(Options &options, double *ions, double epot) {
 void getOptions(Options &options, ConfigMap &config) {
     //Ions
     options.nEsp=getConfig(config,"ions::nEsp",1);
-    options.size=getConfig(config,"ions::size",2e3);
+    options.sizex=getConfig(config,"ions::sizex",2e3);
+    options.sizey=getConfig(config,"ions::sizey",2e3);
+    options.sizez=getConfig(config,"ions::sizez",2e3);
     options.n=new int[options.nEsp];
     options.m=new double[options.nEsp];
     int *tmpDir=new int[options.nEsp];
@@ -585,12 +587,17 @@ bool initialization(Options &options, double *ions) {
         srand(options.seed);                     //Initialize random generator
         for(int i=0;i<3*n;i+=3) {                //Position initialization
             //ions[i]=options.size*((double)rand()/RAND_MAX-0.5);
-            double r=options.size*pow((double)rand()/RAND_MAX,1.0/3.0);
+	    double rx=options.sizex*pow((double)rand()/RAND_MAX,
+					options.sizex/(options.sizex+options.sizey+options.sizez));
+	    double ry=options.sizey*pow((double)rand()/RAND_MAX,
+					options.sizey/(options.sizey+options.sizey+options.sizez));
+	    double rz=options.sizez*pow((double)rand()/RAND_MAX,
+					options.sizey/(options.sizez+options.sizey+options.sizez));
             double phi=2*pi*((double)rand()/RAND_MAX);
             double theta=acos(2*((double)rand()/RAND_MAX-0.5));
-            ions[i]=r*sin(theta)*cos(phi);
-            ions[i+1]=r*sin(theta)*sin(phi);
-            ions[i+2]=r*cos(theta);
+	    ions[i]=rx*sin(theta)*cos(phi);
+	    ions[i+1]=ry*sin(theta)*sin(phi);
+	    ions[i+2]=rz*cos(theta);
         }
     }
     return true;
