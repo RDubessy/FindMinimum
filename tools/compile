@@ -1,0 +1,1 @@
+gcc -lm -std=c99 -Wall -Wextra -g depouille.c -o depouille
