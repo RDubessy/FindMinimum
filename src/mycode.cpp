@@ -321,7 +321,7 @@ double gradient_descent(Options &options, double *ions) {
                 if(tmp>max)
                     max=tmp;
             }
-            diff=epot;
+            diff=epot+eint;
             double *np=new double[3*n];
             do {
                 t*=beta;
@@ -331,11 +331,11 @@ double gradient_descent(Options &options, double *ions) {
                 }
                 shuffle(options,ions);
                 nc=energy_grad(options,np,grad,epot,eint);
-            } while(epot>diff);
+            } while((epot+eint)>diff);
             for(int i=0;i<3*n;i++)
                 ions[i]=np[i];
             delete[] np;
-            diff-=epot;
+            diff-=epot+eint;
             max=sqrt(max)*t;
             norm=sqrt(norm)*t/n;
             /* }}} */
@@ -343,7 +343,7 @@ double gradient_descent(Options &options, double *ions) {
         if(diff<0)
             cerr << "[I] Warning : Energy incresead at this step ["
                 << c << "] !\n"
-                << "[I] Was : " << epot+diff << ", is : " << epot << endl;
+                << "[I] Was : " << epot++eint+diff << ", is : " << epot+eint << endl;
         else {
             if(c%10==0)
 	      {
