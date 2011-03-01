@@ -1,5 +1,7 @@
 all:
 	cd src && make all
+tools-bin:
+	cd tools && make all
 install:
 	cp bin/findMinimum /usr/local/bin/
 uninstall:
@@ -8,6 +10,7 @@ clean:
 	cd src && make clean
 	cd bin && rm -rf *
 	cd doc && rm -rf html
+	cd tools && make clean
 snapshot:
 	tar cvjf ~/public_html/src/findMinimum.tar.bz2 ../findMinimum --exclude-vcs --exclude=html --exclude=*.o --exclude=bin/findMinimum --exclude=*.bz2 --exclude=test
 	cp -r doc/html/* ~/public_html/doc/findMinimum/
