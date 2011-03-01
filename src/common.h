@@ -17,7 +17,7 @@ void printUsage(char []);
 /*! \brief This method reads a string and remove any blanks or comments. */
 string strip(string);
 /*! \brief This method populates the map. */
-int parseConfig(ConfigMap &);
+bool parseConfig(ConfigMap &);
 int getConfig(ConfigMap &,const string &,int);
 double getConfig(ConfigMap &,const string &,double);
 string getConfig(ConfigMap &,const string &,const string &);

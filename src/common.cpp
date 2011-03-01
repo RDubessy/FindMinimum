@@ -163,7 +163,7 @@ string strip(string s) {
 }
 /* }}} */
 /* parseConfig: {{{ */
-int parseConfig(ConfigMap &config) {
+bool parseConfig(ConfigMap &config) {
     string appKey("");
     ifstream file(config["configFile"].c_str(),ios::in);
     if(!file.good()) {
