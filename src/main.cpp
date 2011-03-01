@@ -56,7 +56,7 @@
  * - algorithm::gpres, double target precision on step size;
  * - trap::ox, double, stiffness (in MHz) along the x axis, for Hydrogen;
  * - trap::oy, double, stiffness (in MHz) along the y axis, for Hydrogen;
- * - trap::oz, double, stiffness (in MHz) along the z axis (mass independant);
+ * - trap::oz, double, stiffness (MHz^2 * AMU) : (oscillating frequency along the z axis)^2 * (mass at which it have been measured);
  * - ions::size, double, diameter of the initial cloud (in microns);
  * - ions::nEsp, integer, number of ion species (with different mass);
  * - ions::n1, integer, number of ions of the first specie;

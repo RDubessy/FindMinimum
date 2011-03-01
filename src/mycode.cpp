@@ -27,6 +27,8 @@ double mp=1.672621637e-27;             /*!<\brief Proton mass. */
 double h=6.62606896e-34;               /*!<\brief Planck constant. */
 /*!\brief Energy normalization coefficient. */
 double coeff=8*pi*pi*pi*eps0*mp/(e*e)*1e-6;
+//The energy for the coulomb interaction is 1/r with R in radiants.
+//The mass being in AMU and the Frequency in MHz we end up on this coefficient
 /*!\brief Cooling intensity normalization coefficient. */
 double coeffCool=4*pi*eps0*h/(e*e)*1e3;
 /* }}} */
@@ -294,9 +296,17 @@ double gradient_descent(Options &options, double *ions) {
         file << "#step Energy[pot] Energy[int] displacement Nint Nsearch\n"
             << c << " " << epot << " " << eint << " " << max << " " << nc
             << " " << ns << endl;;
-    display(options,ions,epot+eint);
+    if(write_position_file(options, ions, epot+eint)) //write to the file
+      display(options,ions,epot+eint);//Initial cloud display
     cerr << "[I] Initial energy : " << epot + eint 
         << "[" << epot << "|" << eint<<"]" << endl;
+    double tmin,tmax;
+    tmin=0.01;
+    tmax=500;
+    double t;
+    t=tmax;
+    double beta=0.5;
+    double gamma=1.5;
     while(true) {
         if(options.search==0) {
             /* Exact line search. {{{ */
@@ -308,8 +318,7 @@ double gradient_descent(Options &options, double *ions) {
             /* }}} */
         } else if(options.search==1) {
             /* Backtracking search. {{{ */
-            double t=1.0;
-            double beta=0.5;
+	  //Modified to a pseudo optimisation search, it's an auto increasing backtracking
             norm=0.0;
             max=0.0;
             for(int i=0;i<3*n;i++) {
@@ -318,21 +327,44 @@ double gradient_descent(Options &options, double *ions) {
                 if(tmp>max)
                     max=tmp;
             }
-            diff=epot;
+            diff=epot+eint;
             double *np=new double[3*n];
+	    int p=0;
+	    t/=beta;
             do {
                 t*=beta;
                 //stop=diff-alpha*t*norm;
                 for(int i=0;i<3*n;i++) {
                     np[i]=ions[i]-t*grad[i];
                 }
-                shuffle(options,ions);
                 nc=energy_grad(options,np,grad,epot,eint);
-            } while(epot>diff);
+		p++;
+            } while((epot+eint)>diff);
+	    //We see if increasing the coefficient can have a good effect
+	    if(p==1 && t<tmax)
+	      {
+		double olddiff;
+		do {
+		  olddiff=diff-(epot+eint);
+		  t*=gamma;
+		  //stop=diff-alpha*t*norm;
+		  for(int i=0;i<3*n;i++) {
+		    np[i]=ions[i]-t*grad[i];
+		  }
+		  nc=energy_grad(options,np,grad,epot,eint);
+		  p++;
+		} while(((diff-(epot+eint))>olddiff)&& p<5 && t<tmax);
+	      }
+	    cerr << "Backtracking t : "<< t<<endl;
+	    if(t<tmin)
+	      t=tmin;
+	    if(t>tmax)
+	      t=tmax;
             for(int i=0;i<3*n;i++)
-                ions[i]=np[i];
+	      ions[i]=np[i];
             delete[] np;
-            diff-=epot;
+            diff-=epot+eint;
+	    shuffle(options,ions);
             max=sqrt(max)*t;
             norm=sqrt(norm)*t/n;
             /* }}} */
@@ -340,10 +372,15 @@ double gradient_descent(Options &options, double *ions) {
         if(diff<0)
             cerr << "[I] Warning : Energy incresead at this step ["
                 << c << "] !\n"
-                << "[I] Was : " << epot+diff << ", is : " << epot << endl;
+                << "[I] Was : " << epot+eint+diff << ", is : " << epot+eint << endl;
         else {
             if(c%10==0)
-                display(options,ions,epot+eint);
+	      {
+		if(write_position_file(options, ions, epot+eint)) //write to the file
+		  display(options,ions,epot+eint); //Display every 10 frames
+		else
+		  cerr << "[I] Position file written, step [" << c << "]" << endl;
+	      }
             /*
             diff/=epot+eint;
             if(diff<Epres) {
@@ -366,12 +403,13 @@ double gradient_descent(Options &options, double *ions) {
         if(monitor)
             file << c << " " << epot << " " << eint << " " << max << " " 
                 << nc << " " << ns << endl;
-        if(pres<options.dpres)
+        if(pres<options.dpres && c > options.minsteps)
             break;
     }
     cerr << "[I] Gradient descent took " << c << " iterations to complete."
         << endl;
-    display(options,ions,epot+eint);
+    if(write_position_file(options, ions, epot+eint)) //write to the file
+      display(options,ions,epot+eint); //Final display
     if(monitor) {
         file << endl;
         file.close();
@@ -400,6 +438,46 @@ void display(Options &options, double *ions, double frame) {
     }
     cout << endl;
     return;
+}
+/* }}} */
+/* test_position_file: test if we can write in the positions file {{{ */
+int test_position_file(Options &options) {
+  ofstream file(options.save_file.c_str());
+  if(!file.good()) {
+    cerr << "[E] Can not open saving file (" << options.monitor.c_str()
+	 << ") !" << endl;
+    return -1;
+  }
+  return 0;
+}
+/* }}} */
+/* write_position_file: write the position of the ions in the file {{{ */
+int write_position_file(Options &options, double *ions, double frame) {
+  
+  ofstream file(options.save_file.c_str());
+  if(!file.good()) {
+    cerr << "[E] Can not open saving file (" << options.monitor.c_str()
+	 << ") !" << endl;
+    return -1;
+  }
+  
+  int c=0;
+  int max=0;
+  file << "#frame=" << frame << "\n";
+  for(int i=0;i<options.nEsp;i++) {
+    max+=options.n[i];
+    file << "#m=" << options.m[i] << "\n";
+    while(c<max) {
+      file << ions[3*c] << " " << ions[3*c+1] << " " << ions[3*c+2] 
+	   << "\n";
+      c++;
+    }
+    file << "\n";
+  }
+  file << endl;
+  file.close();
+  
+  return 0;
 }
 /* }}} */
 /* cloud_analysis: {{{ */
@@ -446,7 +524,9 @@ void cloud_analysis(Options &options, double *ions, double epot) {
 void getOptions(Options &options, ConfigMap &config) {
     //Ions
     options.nEsp=getConfig(config,"ions::nEsp",1);
-    options.size=getConfig(config,"ions::size",2e3);
+    options.sizex=getConfig(config,"ions::sizex",2e3);
+    options.sizey=getConfig(config,"ions::sizey",2e3);
+    options.sizez=getConfig(config,"ions::sizez",2e3);
     options.n=new int[options.nEsp];
     options.m=new double[options.nEsp];
     int *tmpDir=new int[options.nEsp];
@@ -480,7 +560,7 @@ void getOptions(Options &options, ConfigMap &config) {
             options.cDir[ii]=options.cDir[ii+1]=options.cDir[ii+2]=false;
             options.eff[ii]=coeff*pow(options.stdo[0],2.0)/options.m[i];
             options.eff[ii+1]=coeff*pow(options.stdo[1],2.0)/options.m[i];
-            options.eff[ii+2]=coeff*pow(options.stdo[2],2.0)*options.m[i];
+            options.eff[ii+2]=coeff*options.stdo[2];
             if(tmpDir[i]>-1) {
                 options.cDir[ii+tmpDir[i]]=true;
                 options.cInt[ii+tmpDir[i]]=coeffCool*tmpInt[i];
@@ -492,12 +572,14 @@ void getOptions(Options &options, ConfigMap &config) {
     options.interactions=getConfig(config,"algorithm::interactions",0);
     options.search=getConfig(config,"algorithm::search",0);
     options.monitor=getConfig(config,"algorithm::monitor","monitor");
+    options.minsteps=getConfig(config,"algorithm::minsteps",1);
     options.dpres=getConfig(config,"algorithm::dpres",1e-3);
     options.gpres=getConfig(config,"algorithm::gpres",1e-3);
     options.seed=getConfig(config,"algorithm::seed",-1);
     if(options.seed==-1)
         options.seed=(int)time(NULL);
     //General
+    options.save_file=getConfig(config,"general::save_file","save_file");
     options.file=false;
     options.init=getConfig(config,"general::init","");
     if(options.init.size()>0)
@@ -534,12 +616,17 @@ bool initialization(Options &options, double *ions) {
         srand(options.seed);                     //Initialize random generator
         for(int i=0;i<3*n;i+=3) {                //Position initialization
             //ions[i]=options.size*((double)rand()/RAND_MAX-0.5);
-            double r=options.size*pow((double)rand()/RAND_MAX,1.0/3.0);
+	    double rx=options.sizex*pow((double)rand()/RAND_MAX,
+					options.sizex/(options.sizex+options.sizey+options.sizez));
+	    double ry=options.sizey*pow((double)rand()/RAND_MAX,
+					options.sizey/(options.sizey+options.sizey+options.sizez));
+	    double rz=options.sizez*pow((double)rand()/RAND_MAX,
+					options.sizey/(options.sizez+options.sizey+options.sizez));
             double phi=2*pi*((double)rand()/RAND_MAX);
             double theta=acos(2*((double)rand()/RAND_MAX-0.5));
-            ions[i]=r*sin(theta)*cos(phi);
-            ions[i+1]=r*sin(theta)*sin(phi);
-            ions[i+2]=r*cos(theta);
+	    ions[i]=rx*sin(theta)*cos(phi);
+	    ions[i+1]=ry*sin(theta)*sin(phi);
+	    ions[i+2]=rz*cos(theta);
         }
     }
     return true;
