@@ -382,7 +382,7 @@ int octTree::energy_grad(double *grad, double &epot) {
 #ifdef DEBUG
                     res+=nq;
 #endif
-                    epot+=invr;
+                    epot_t+=invr;
                     invr*=invr2;
                     t=(v4sf){invr,invr,invr,0};
                     r=__builtin_ia32_mulps(r,t);
